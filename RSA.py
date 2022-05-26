@@ -1,4 +1,5 @@
 from premiers import pr
+from random import *
 
 def PGCD(a,b):
     return b if a%b==0 else PGCD(b,a%b)
