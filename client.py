@@ -1,4 +1,6 @@
 import socket
+import RSA
+from random import *
 
 class Client:
     def __init__(self,pseudo,host="127.0.0.1",port=10005):
@@ -23,7 +25,7 @@ class Client:
         else:
             print(f"Error {status}")
     def signup(self):
-        print("Crating your account...")
+        print("Creating your account...")
         self.socket.send(f"Create: {self.pseudo}".encode("utf-8"))
         status = self.socket.recv(1024)
         status = int(status.decode())
@@ -35,3 +37,17 @@ class Client:
             print("An account already exists with this pseudo")
         else:
             print(f"Error {status}")
+    def secure(self):
+        print("Requesting a secured communication channel...")
+        self.socket.send("Secure: RSA + ext_vig_256".encode("utf-8"))
+        #Here, the clients requests a secured communication, with a symetrical key (vigénère algorithm extended to ascii table) exchanged with RSA protocol first. This way of functionning does NOT prevent MITM attack
+        #For now, RSA + ext_vig_256 is the only proposed connexion
+        #Steps:
+        #  1.The server sends its public key
+        #  2.The client sends the symetric key, encoded with the server's public key
+        #  3.The server is able to decode the symetric key with its private key, and each side has the symetric key, communication is ready
+        self.server_public_key = tuple(map(lambda x: int(x.strip()),self.socket.recv(1024).split(b",")))
+        self.symetric_key = "".join([chr(randint(0,255)) for _ in range(20)])
+        cle_chiffree = RSA.chiffrement_RSA(self.symetric_key,self.server_public_key)
+        self.socket.send(f"SymKey: {cle_chiffree}".encode("utf-8"))
+        print("Channel secured")
