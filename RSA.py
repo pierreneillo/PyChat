@@ -29,7 +29,7 @@ def RSA(p,q):
     return [(e,n),(d,n)]
 
 def generation_cle_RSA():
-    p,q = int(choice(pr)),int(choice(pr))
+    p,q = int(choice(pr[:100])),int(choice(pr[:100]))
     return RSA(p,q)
 
 
