@@ -29,20 +29,37 @@ def RSA(p,q):
     return [(e,n),(d,n)]
 
 def generation_cle_RSA():
-    p,q = int(choice(pr[:100])),int(choice(pr[:100]))
+    p,q = int(choice(pr[])),int(choice(pr[:100]))
     return RSA(p,q)
 
 
 def chiffrement_RSA(message,clePub):
     e,n = clePub
-    messageCode = ""
+    messageCode = []
     for char in message:
-        messageCode += chr((ord(char)**e)%n)
+        messageCode.append((ord(char)**e)%n)
     return messageCode
 
 def dechiffrement_RSA(message,clePriv):
     d,n = clePriv
     messageDecode = ""
-    for char in message:
-        messageDecode += chr((ord(char)**d)%n)
+    for num in message:
+        messageDecode += chr((num**d)%n)
     return messageDecode
+
+def chiffrement_vigenere256(messsage,cle):
+    s = ""
+    for i in range(len(message)):
+        c = message[i]
+        k = cle[i]
+        s += char( (ord(c) +  ord(k))%256 )
+    return s
+
+def dechiffrement_vigenere256(message,cle):
+    s = ""
+    for i in range(len(message)):
+        c = message[i]
+        k = cle[i]
+        s += char( (ord(c) -  ord(k))%256 )
+    return s
+
