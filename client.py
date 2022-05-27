@@ -8,9 +8,13 @@ class Client:
         self.host = host
         self.port = port
         self.pseudo = pseudo
+        self.clePub,self.clePriv = RSA.generation_cle_RSA()
         print(f"Attempting connexion on port {self.port}...")
         self.socket.connect((self.host,self.port))
         print("Connexion sucessful")
+        self.log()
+        self.secure()
+
     def log(self):
         print("Logging...")
         self.socket.send(f"Log: {self.pseudo}".encode("utf-8"))
@@ -24,6 +28,19 @@ class Client:
             print(f"No such existing account '{self.pseudo}'")
         else:
             print(f"Error {status}")
+
+    def logout(self):
+        print("Logging out...")
+        self.socket.send(f"Logout: {self.pseudo}".encode("utf-8"))
+        status = self.socket.recv(1024)
+        status = int(status.decode())
+        if status==200:
+            print("Log out sucessful")
+            self.socket.close()
+            print("Connexion closed")
+        elif status==500:
+            print("An error occured, please try later")
+
     def signup(self):
         print("Creating your account...")
         self.socket.send(f"Create: {self.pseudo}".encode("utf-8"))
@@ -37,6 +54,7 @@ class Client:
             print("An account already exists with this pseudo")
         else:
             print(f"Error {status}")
+
     def secure(self):
         print("Requesting a secured communication channel...")
         self.socket.send("Secure: RSA + ext_vig_256".encode("utf-8"))
@@ -51,3 +69,5 @@ class Client:
         cle_chiffree = RSA.chiffrement_RSA(self.symetric_key,self.server_public_key)
         self.socket.send(f"SymKey: {cle_chiffree}".encode("utf-8"))
         print("Channel secured")
+
+a = Client("root_user")
