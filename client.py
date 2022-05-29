@@ -3,7 +3,7 @@ import RSA
 from random import *
 
 class Client:
-    def __init__(self,pseudo,host="127.0.0.1",port=10005):
+    def __init__(self,pseudo,port=1025,host="127.0.0.1"):
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.host = host
         self.port = port
@@ -65,9 +65,26 @@ class Client:
         #  2.The client sends the symetric key, encoded with the server's public key
         #  3.The server is able to decode the symetric key with its private key, and each side has the symetric key, communication is ready
         self.server_public_key = tuple(map(lambda x: int(x.strip()),self.socket.recv(1024).split(b",")))
-        self.symetric_key = "".join([chr(randint(0,255)) for _ in range(20)])
+        self.symetric_key = "".join([chr(randint(0,255)) for _ in range(6)])
         cle_chiffree = RSA.chiffrement_RSA(self.symetric_key,self.server_public_key)
         self.socket.send(f"SymKey: {cle_chiffree}".encode("utf-8"))
-        print("Channel secured")
+        answer = self.socket.recv(1024)
+        if answer == b"OK":
+            print("Channel secured")
+        else:
+            print("An error occured while securizing the channel, please try later")
+    def getloggedlist(self):
+        print("Asking for logged users list...")
+        self.socket.send("Logged?".encode("utf-8"))
+        answer = self.socket.recv(1024)
+        if answer == b"403":
+            print("User has not access to this information")
+        else:
+            print(self.decode(answer.decode("utf-8"),self.symkey))
 
-a = Client("root_user")
+
+    def encode(self,message,key):
+        return RSA.chiffrement_vigenere256(message,key)
+
+    def decode(self,message,key):
+        return RSA.dechiffrement_vigenere256(message,key)
