@@ -1,6 +1,8 @@
 from premiers import pr
 from random import *
 
+MAX = 50
+
 def PGCD(a,b):
     return b if a%b==0 else PGCD(b,a%b)
 
@@ -29,7 +31,7 @@ def RSA(p,q):
     return [(e,n),(d,n)]
 
 def generation_cle_RSA():
-    p,q = int(choice(pr)),int(choice(pr[:100]))
+    p,q = int(choice(pr[:MAX])),int(choice(pr[:100]))
     return RSA(p,q)
 
 
@@ -47,19 +49,19 @@ def dechiffrement_RSA(message,clePriv):
         messageDecode += chr((num**d)%n)
     return messageDecode
 
-def chiffrement_vigenere256(messsage,cle):
+def chiffrement_vigenere256(message,cle):
     s = ""
     for i in range(len(message)):
         c = message[i]
-        k = cle[i]
-        s += char( (ord(c) +  ord(k))%256 )
+        k = cle[i%len(cle)]
+        s += chr( (ord(c) +  ord(k))%255)
     return s
 
 def dechiffrement_vigenere256(message,cle):
     s = ""
     for i in range(len(message)):
         c = message[i]
-        k = cle[i]
-        s += char( (ord(c) -  ord(k))%256 )
+        k = cle[i%len(cle)]
+        s += chr( (ord(c) -  ord(k))%255)
     return s
 
