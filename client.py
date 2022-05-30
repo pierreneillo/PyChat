@@ -3,7 +3,7 @@ import RSA
 from random import *
 
 class Client:
-    def __init__(self,pseudo,port=1025,host="127.0.0.1"):
+    def __init__(self,pseudo,port=10024,host="127.0.0.1"):
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.host = host
         self.port = port
@@ -14,10 +14,11 @@ class Client:
         print("Connexion sucessful")
         self.log()
         self.secure()
+        self.basic_comm()
 
     def log(self):
         print("Logging...")
-        self.socket.send(f"Log: {self.pseudo}".encode("utf-8"))
+        self.socket.send(f"\x02{self.pseudo}".encode("utf-8"))
         status = self.socket.recv(1024)
         status = int(status.decode())
         if status==200:
@@ -57,7 +58,7 @@ class Client:
 
     def secure(self):
         print("Requesting a secured communication channel...")
-        self.socket.send("Secure: RSA + ext_vig_256".encode("utf-8"))
+        self.socket.send(b"\x05")
         #Here, the clients requests a secured communication, with a symetrical key (vigénère algorithm extended to ascii table) exchanged with RSA protocol first. This way of functionning does NOT prevent MITM attack
         #For now, RSA + ext_vig_256 is the only proposed connexion
         #Steps:
@@ -65,14 +66,17 @@ class Client:
         #  2.The client sends the symetric key, encoded with the server's public key
         #  3.The server is able to decode the symetric key with its private key, and each side has the symetric key, communication is ready
         self.server_public_key = tuple(map(lambda x: int(x.strip()),self.socket.recv(1024).split(b",")))
+        print("Server's public key received...")
         self.symetric_key = "".join([chr(randint(0,255)) for _ in range(6)])
         cle_chiffree = RSA.chiffrement_RSA(self.symetric_key,self.server_public_key)
-        self.socket.send(f"SymKey: {cle_chiffree}".encode("utf-8"))
+        cle_chiffree = "\xff".join(list(map(str,cle_chiffree)))
+        self.socket.send(f"\x06{cle_chiffree}".encode("utf-8"))
         answer = self.socket.recv(1024)
-        if answer == b"OK":
+        if answer == b"200":
             print("Channel secured")
         else:
             print("An error occured while securizing the channel, please try later")
+
     def getloggedlist(self):
         print("Asking for logged users list...")
         self.socket.send("Logged?".encode("utf-8"))
@@ -82,7 +86,12 @@ class Client:
         else:
             print(self.decode(answer.decode("utf-8"),self.symkey))
 
-
+    def basic_comm(self):
+        while True:
+            message = str(input("> "))
+            self.socket.send(b"\x04"+message.encode("utf-8"))
+            answer = self.socket.recv(1024)
+            print(answer.decode("utf-8"))
     def encode(self,message,key):
         return RSA.chiffrement_vigenere256(message,key)
 
